@@ -41,13 +41,13 @@ def extract(file_path):
     Returns:
         list: Danh sach cac records (dictionaries)
     """
-    print(f"Extracting data from {file_path}...")
-    # TODO: Viet code doc file JSON o day
-    # Vi du:
-    #   with open(file_path, 'r') as f:
-    #       data = json.load(f)
-    #   return data
-    pass
+    try:
+        with open(file_path, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"Error: {file_path} not found.")
+        return []
+
 
 
 def validate(data):
@@ -67,46 +67,48 @@ def validate(data):
         list: Danh sach cac records hop le
     """
     valid_records = []
-    error_count = 0
-
-    # TODO: Lap qua data, kiem tra tung record
-    # Giu lai record hop le, dem record loi
-
-    print(f"Validation complete. Valid: {len(valid_records)}, Errors: {error_count}")
+    dropped_records = []
+    
+    for record in data:
+        # TODO: Ensure price is a positive number
+        if record.get('price', 0) <= 0:
+            dropped_records.append({"id": record.get('id'), "reason": "Price <= 0"})
+            continue
+            
+        # TODO: Check if category is provided and valid
+        if not record.get('category'):
+            dropped_records.append({"id": record.get('id'), "reason": "Missing Category"})
+            continue
+            
+        valid_records.append(record)
+        
+    # TODO: Summarize validation results
+    print(f"Validation summary: {len(valid_records)} kept, {len(dropped_records)} dropped.")
+    if dropped_records:
+        print(f"Errors found: {dropped_records}")
     return valid_records
 
 
 def transform(data):
-    """
-    Task 3: Ap dung business logic.
+    df = pd.DataFrame(data)
+    
+    # Logic 1: Discount
+    df['discounted_price'] = df['price'] * 0.9
+    
+    # Logic 2: Formatting
+    df['category'] = df['category'].str.title()
+    
+    # Logic 3: Metadata (Observability)
+    df['processed_at'] = datetime.datetime.now().isoformat()
+    
+    return df
 
-    Yeu cau:
-       - Tinh discounted_price = price * 0.9 (giam 10%)
-       - Chuan hoa category thanh Title Case (vi du: "electronics" -> "Electronics")
-       - Them cot processed_at = timestamp hien tai
-
-    Goi y:
-       - Dung pd.DataFrame(data) de tao DataFrame
-       - df['discounted_price'] = df['price'] * 0.9
-       - df['category'] = df['category'].str.title()
-       - df['processed_at'] = datetime.datetime.now().isoformat()
-
-    Returns:
-        pd.DataFrame: DataFrame da duoc transform
-    """
-    # TODO: Tao DataFrame va ap dung transformations
-    pass
 
 
 def load(df, output_path):
-    """
-    Task 4: Luu DataFrame ra file CSV.
+    df.to_csv(output_path, index=False)
+    print(f"Successfully loaded {len(df)} records to {output_path}")
 
-    Goi y:
-       - df.to_csv(output_path, index=False)
-    """
-    # TODO: Luu DataFrame ra CSV
-    print(f"Data saved to {output_path}")
 
 
 # ============================================================
